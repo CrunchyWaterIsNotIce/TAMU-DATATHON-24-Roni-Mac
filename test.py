@@ -10,8 +10,9 @@ def get_data_from_dir(dir_name):
         data = pd.concat([data, new_file_data], axis=0)
     return data
 
-def filter_by_date_range(start, end):
-    pass
+def filter_by_date_range(data, start, end):
+    date_range = pd.date_range(start, end).strftime('%Y-%m-%d')
+    return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 
 '''
@@ -23,7 +24,7 @@ def filter_by_date_range(start, end):
 '''
 
 data = get_data_from_dir('data')
-
+st.write(filter_by_date_range(data, '2024-04-25', '2024-05-02'))
 
 
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
