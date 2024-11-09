@@ -1,10 +1,19 @@
 import streamlit as st
 import pandas as pd
+import os
 
-df = pd.DataFrame({
-  'first column': [1, 2, 3, 4],
-  'second column': [10, 20, 30, 40]
-})
+def get_data_from_dir(dir_name):
+    data_file_names = os.listdir(dir_name)
+    data = pd.DataFrame()
+    for file_name in data_file_names:
+        new_file_data = pd.read_csv(f'{dir_name}/{file_name}')
+        data = pd.concat([data, new_file_data], axis=0)
+    return data
+
+def filter_by_date_range(start, end):
+    pass
+
+
 '''
 # Hello!
 ## Hey gang
@@ -13,10 +22,12 @@ df = pd.DataFrame({
 - Yap yap yap yap yap
 '''
 
+data = get_data_from_dir('data')
+
+
+
+# one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
+
 col1, col2 = st.columns(2)
 col1.write("Im in a coloumn right now")
 col2.write('The quick brown fox jumps over the lazy dog')
-
-
-
-col1.line_chart(df)
