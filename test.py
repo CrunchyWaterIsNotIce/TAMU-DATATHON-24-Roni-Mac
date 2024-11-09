@@ -23,8 +23,10 @@ def filter_by_date_range(data, start, end):
 - Yap yap yap yap yap
 '''
 
+
 data = get_data_from_dir('data')
-st.write(filter_by_date_range(data, '2024-04-25', '2024-05-02'))
+start, end = st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
+st.write(filter_by_date_range(data, start, end))
 
 
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
