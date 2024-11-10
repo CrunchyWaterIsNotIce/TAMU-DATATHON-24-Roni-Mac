@@ -23,15 +23,17 @@ def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 def make_bar_graph(data, field):
+    data = data.copy(deep=False).drop_duplicates(subset=[field, 'Order ID', 'Sent Date'])
     counts = pd.DataFrame.from_dict(Counter(data[field].dropna()), orient='index').nlargest(10, 0) 
     keys = list(counts[0].keys())[::-1]
     vals = list(counts[0])[::-1]
     fig, ax = plt.subplots()
-    ax.set_xlabel('Number of Purchases')
+    ax.set_xlabel('Number of Purchases with Option')
     ax.barh(keys, vals)
     return fig
 
 def order_by_time(data):
+    data = data.copy(deep=False).drop_duplicates(subset=['Sent Date', 'Order ID'])
     data['time'] = pd.to_datetime(data['Sent Date']).dt.strftime('%H').astype(float)
     data = data.sort_values(by = ['time'])
     counts = pd.DataFrame.from_dict(Counter(data['time'].dropna()), orient='index')
@@ -40,9 +42,22 @@ def order_by_time(data):
     ax.set_xticks(range(6,23, 2))
     ax.set_xticklabels(('6 AM','8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM','8 PM', '10 PM'))
     ax.set_xlabel('Time')
-    ax.set_ylabel('Sales')
+    ax.set_ylabel('Orders')
     ax.plot(counts)
     return fig
+
+def graph_monthly_sales(data):
+    data = data.copy(deep=False).drop_duplicates(subset=['Sent Date', 'Order ID'])
+    data['month'] = pd.to_datetime(data['Sent Date']).dt.strftime('%b')
+
+    counts = pd.DataFrame.from_dict(Counter(data['month'].dropna()), orient='index')
+    fig, ax = plt.subplots() 
+    ax.set_ylim(0,5000)
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Orders')
+    ax.plot(counts)
+    return fig
+
 
 ## look at filter data
 
@@ -50,16 +65,10 @@ def order_by_time(data):
 data = get_data_from_dir('data')
 data['Parent Menu Selection'] = data['Parent Menu Selection'].replace('Mac and Cheese Party Tray (Plus FREE Garlic Bread)', 'Party Tray')
 data['Option Group Name'] = data['Option Group Name'].replace('Do you want Mac and Cheese added inside?', 'Mac and Cheese inside?')
-# Data
-
-
-start, end= st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
-st.write(filter_by_date_range(data, start, end))
 
 # Total sales over time
 orderID_sentData = data[["Order #", "Sent Date"]]
 
-st.write(orderID_sentData)
 
 
 st.title("Roni's Mac Bar")
@@ -76,9 +85,9 @@ else:
 
 col1, col2 = st.columns(2)
 col1.subheader('Most Popular Options')
-col2.subheader('Sales Throughout the Day')
+col2.subheader('Sales throughout the day')
 graph_container = col1.container()
-filed_selected = col1.selectbox('Select a field', ('Item Type', 'Modifier', 'Options'))
+filed_selected = col1.selectbox('Select a field', ('Item Type', 'Modifier'))
 fields = {'Item Type':'Parent Menu Selection', 'Modifier':'Modifier', 'Options':'Option Group Name'}
 field = fields[filed_selected]
 
@@ -87,6 +96,13 @@ if len(filtered_data) != 0:
     graph_container.pyplot(fig1)
     fig2 = order_by_time(filtered_data)
     col2.pyplot(fig2)
+
+fig3 = graph_monthly_sales(data)
+col1.pyplot(fig3)
+    
+
+
+
 
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
 
