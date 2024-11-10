@@ -19,7 +19,14 @@ def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     date_range = pd.date_range(start, end).strftime('%Y-%m-%d')
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
-
+def make_bar_graph(data, field):
+    counts = pd.DataFrame.from_dict(Counter(filtered_data[field].dropna()), orient='index').nlargest(10, 0) 
+    keys = list(counts[0].keys())
+    vals = list(counts[0])
+    fig, ax = plt.subplots()
+    ax.bar(keys, vals)
+    ax.tick_params(axis='x', rotation=90)
+    return fig
 
 
 # All data from all CSV files
@@ -42,12 +49,7 @@ else:
 col1, col2 = st.columns(2)
 field = col1.selectbox('Select a field', ('Modifier', 'Option Group Name', 'Parent Menu Selection'))
 if len(filtered_data) != 0:
-    counts = pd.DataFrame.from_dict(Counter(filtered_data[field].dropna()), orient='index').nlargest(10, 0) 
-    keys = list(counts[0].keys())
-    vals = list(counts[0])
-    fig, ax = plt.subplots()
-    ax.bar(keys, vals)
-    ax.tick_params(axis='x', rotation=90)
+    fig  = make_bar_graph(filtered_data, field)
     col1.pyplot(fig)
 
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
