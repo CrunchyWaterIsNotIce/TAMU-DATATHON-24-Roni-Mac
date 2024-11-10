@@ -17,14 +17,27 @@ def get_data_from_dir(dir_name):
 # Filters a DataFrame by a range of dates
 def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     date_range = pd.date_range(start, end).strftime('%Y-%m-%d')
+
+    print(pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range))
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 
 
+## look at filter data
 
 # All data from all CSV files
 data = get_data_from_dir('data')
 data['Parent Menu Selection'] = data['Parent Menu Selection'].replace('Mac and Cheese Party Tray (Plus FREE Garlic Bread)', 'Party Tray')
+# Data
+data = get_data_from_dir('data')
+
+start, end= st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
+st.write(filter_by_date_range(data, start, end))
+
+# Total sales over time
+orderID_sentData = data[["Order #", "Sent Date"]]
+
+st.write(orderID_sentData)
 
 
 st.title("Roni's Mac Bar")
