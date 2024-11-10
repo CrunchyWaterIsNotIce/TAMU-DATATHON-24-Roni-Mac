@@ -46,6 +46,8 @@ def order_by_time(data):
     ax.plot(counts)
     return fig
 
+           
+
 ## look at filter data
 
 # All data from all CSV files
@@ -53,13 +55,6 @@ data = get_data_from_dir('data')
 data['Parent Menu Selection'] = data['Parent Menu Selection'].replace('Mac and Cheese Party Tray (Plus FREE Garlic Bread)', 'Party Tray')
 data['Option Group Name'] = data['Option Group Name'].replace('Do you want Mac and Cheese added inside?', 'Mac and Cheese inside?')
 # Data
-
-
-start, end= st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
-st.write(filter_by_date_range(data, start, end))
-
-
-
 date_range = st.date_input('Enter Date Range:', (pd.to_datetime('2024-04-1'), pd.to_datetime('2024-11-09')))
 
 if len(date_range) == 2:
@@ -69,22 +64,20 @@ else:
     filtered_data = data
     
 
-st.subheader("Sales Over Time")
-
-fig, ax = plt.subplots()
-ticks = pd.DataFrame.from_dict()
-
-
-
-
-
 col1, col2 = st.columns(2)
+
+
 col1.subheader('Most Popular Options')
 col2.subheader('Sales Throughout the Day')
 graph_container = col1.container()
 filed_selected = col1.selectbox('Select a field', ('Item Type', 'Modifier', 'Options'))
 fields = {'Item Type':'Parent Menu Selection', 'Modifier':'Modifier', 'Options':'Option Group Name'}
 field = fields[filed_selected]
+
+
+
+
+
 
 if len(filtered_data) != 0:
     counts = pd.DataFrame.from_dict(Counter(filtered_data[field].dropna()), orient='index').nlargest(10, 0) 
@@ -94,6 +87,12 @@ if len(filtered_data) != 0:
     ax.bar(keys, vals)
     ax.tick_params(axis='x', rotation=90)
     col2.pyplot(fig)
+    
+    
+
+
+
+    
     
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
 
