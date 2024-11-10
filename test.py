@@ -18,8 +18,6 @@ def get_data_from_dir(dir_name):
 # Filters a DataFrame by a range of dates
 def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     date_range = pd.date_range(start, end).strftime('%Y-%m-%d')
-
-    print(pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range))
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 def make_bar_graph(data, field):
@@ -58,6 +56,26 @@ def graph_monthly_sales(data):
     ax.plot(counts)
     return fig
 
+def graph_daily_sales(data):
+    data = data.copy(deep=False).drop_duplicates(subset=['Sent Date', 'Order ID'])
+    data['day'] = pd.to_datetime(data['Sent Date']).dt.strftime('%m').astype(float) * 31 + pd.to_datetime(data['Sent Date']).dt.strftime('%d').astype(float)
+    data = data.sort_values(by = ['day'])
+    counts = pd.DataFrame.from_dict(Counter(data['day'].dropna()), orient='index')
+    # counts
+    fig, ax = plt.subplots() 
+    # data['day'][0]
+    # st.write(max(data['day'])-min(data['day']))
+    # dates = data[data['day'].isin(range(int(min(data['day'])), int(max(data['day'])), int((max(data['day'])-min(data['day']))//2)))].drop_duplicates(subset=['day'])
+    # st.write()    
+    # ax.set_xticklabels(pd.to_datetime(dates['Sent Date']).dt.strftime('%b %d'))
+    ax.set_xticklabels('')
+    
+    
+    # ax.set_xlabel('Month')
+    ax.set_ylabel('Orders')
+    ax.plot(counts)
+    return fig
+
 
 ## look at filter data
 
@@ -87,6 +105,13 @@ col1, col2 = st.columns(2)
 col1.subheader('Most Popular Options')
 col2.subheader('Sales throughout the day')
 graph_container = col1.container()
+
+
+cont = st.container()
+col3, col4 = cont.columns(2)
+col3.subheader('Monthly Sales')
+col4.subheader('Daily Sales over time')
+
 filed_selected = col1.selectbox('Select a field', ('Item Type', 'Modifier'))
 fields = {'Item Type':'Parent Menu Selection', 'Modifier':'Modifier', 'Options':'Option Group Name'}
 field = fields[filed_selected]
@@ -96,9 +121,13 @@ if len(filtered_data) != 0:
     graph_container.pyplot(fig1)
     fig2 = order_by_time(filtered_data)
     col2.pyplot(fig2)
+    fig3 = graph_monthly_sales(data)
+    col3.pyplot(fig3)
+    fig4 = graph_daily_sales(filtered_data)
+    col4.pyplot(fig4)
 
-fig3 = graph_monthly_sales(data)
-col1.pyplot(fig3)
+
+
     
 
 
