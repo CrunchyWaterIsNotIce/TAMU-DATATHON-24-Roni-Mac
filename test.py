@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 
+st.title("Roni's Mac Bar")
+
 # Combines every csv file in a directory into a single DataFrame
+@st.cache_data
 def get_data_from_dir(dir_name):
     data_file_names = os.listdir(dir_name)
     data = pd.DataFrame()
@@ -19,7 +22,6 @@ def get_data_from_dir(dir_name):
 def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     date_range = pd.date_range(start, end).strftime('%Y-%m-%d')
 
-    print(pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range))
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 def make_bar_graph(data, field):
@@ -56,22 +58,24 @@ data['Option Group Name'] = data['Option Group Name'].replace('Do you want Mac a
 start, end= st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
 st.write(filter_by_date_range(data, start, end))
 
-# Total sales over time
-orderID_sentData = data[["Order #", "Sent Date"]]
-
-st.write(orderID_sentData)
-
-
-st.title("Roni's Mac Bar")
-
 
 
 date_range = st.date_input('Enter Date Range:', (pd.to_datetime('2024-04-1'), pd.to_datetime('2024-11-09')))
+
 if len(date_range) == 2:
     start, end = date_range
     filtered_data = filter_by_date_range(data, start, end)
 else:
     filtered_data = data
+    
+
+st.subheader("Sales Over Time")
+
+fig, ax = plt.subplots()
+ticks = pd.DataFrame.from_dict()
+
+
+
 
 
 col1, col2 = st.columns(2)
@@ -83,10 +87,13 @@ fields = {'Item Type':'Parent Menu Selection', 'Modifier':'Modifier', 'Options':
 field = fields[filed_selected]
 
 if len(filtered_data) != 0:
-    fig1  = make_bar_graph(filtered_data, field)
-    graph_container.pyplot(fig1)
-    fig2 = order_by_time(filtered_data)
-    col2.pyplot(fig2)
-
+    counts = pd.DataFrame.from_dict(Counter(filtered_data[field].dropna()), orient='index').nlargest(10, 0) 
+    keys = list(counts[0].keys())
+    vals = list(counts[0])
+    fig, ax = plt.subplots()
+    ax.bar(keys, vals)
+    ax.tick_params(axis='x', rotation=90)
+    col2.pyplot(fig)
+    
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
 
