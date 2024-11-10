@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -22,12 +23,25 @@ def filter_by_date_range(data, start = '2024-01-1', end = '2024-01-1'):
     return data[pd.to_datetime(data['Sent Date']).dt.strftime('%Y-%m-%d').isin(date_range)]
 
 def make_bar_graph(data, field):
-    counts = pd.DataFrame.from_dict(Counter(filtered_data[field].dropna()), orient='index').nlargest(10, 0) 
-    keys = list(counts[0].keys())
-    vals = list(counts[0])
+    counts = pd.DataFrame.from_dict(Counter(data[field].dropna()), orient='index').nlargest(10, 0) 
+    keys = list(counts[0].keys())[::-1]
+    vals = list(counts[0])[::-1]
     fig, ax = plt.subplots()
-    ax.bar(keys, vals)
-    ax.tick_params(axis='x', rotation=90)
+    ax.set_xlabel('Number of Purchases')
+    ax.barh(keys, vals)
+    return fig
+
+def order_by_time(data):
+    data['time'] = pd.to_datetime(data['Sent Date']).dt.strftime('%H').astype(float)
+    data = data.sort_values(by = ['time'])
+    counts = pd.DataFrame.from_dict(Counter(data['time'].dropna()), orient='index')
+    fig, ax = plt.subplots()
+    ax.set_xlim(6,22)
+    ax.set_xticks(range(6,23, 2))
+    ax.set_xticklabels(('6 AM','8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM','8 PM', '10 PM'))
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Sales')
+    ax.plot(counts)
     return fig
 
 ## look at filter data
@@ -35,8 +49,9 @@ def make_bar_graph(data, field):
 # All data from all CSV files
 data = get_data_from_dir('data')
 data['Parent Menu Selection'] = data['Parent Menu Selection'].replace('Mac and Cheese Party Tray (Plus FREE Garlic Bread)', 'Party Tray')
+data['Option Group Name'] = data['Option Group Name'].replace('Do you want Mac and Cheese added inside?', 'Mac and Cheese inside?')
 # Data
-data = get_data_from_dir('data')
+
 
 start, end= st.date_input('Enter Date Range:', (pd.to_datetime('2024-01-1'), pd.to_datetime('2024-11-09')))
 st.write(filter_by_date_range(data, start, end))
@@ -60,10 +75,18 @@ else:
 
 
 col1, col2 = st.columns(2)
-field = col1.selectbox('Select a field', ('Modifier', 'Option Group Name', 'Parent Menu Selection'))
+col1.subheader('Most Popular Options')
+col2.subheader('Sales Throughout the Day')
+graph_container = col1.container()
+filed_selected = col1.selectbox('Select a field', ('Item Type', 'Modifier', 'Options'))
+fields = {'Item Type':'Parent Menu Selection', 'Modifier':'Modifier', 'Options':'Option Group Name'}
+field = fields[filed_selected]
+
 if len(filtered_data) != 0:
-    fig  = make_bar_graph(filtered_data, field)
-    col1.pyplot(fig)
+    fig1  = make_bar_graph(filtered_data, field)
+    graph_container.pyplot(fig1)
+    fig2 = order_by_time(filtered_data)
+    col2.pyplot(fig2)
 
 # one_month = data[pd.to_datetime(data['Date']).dt.strftime('%m') == data]
 
